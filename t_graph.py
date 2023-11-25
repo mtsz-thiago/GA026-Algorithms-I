@@ -26,7 +26,6 @@ class TEdge(dict):
     
     def add_property(self, key, value):
         self[key] = value
-        
     
     def __eq__(self, __other: object) -> bool:
         nodes_equals = self._u == __other._u and self._v == __other._v
@@ -82,6 +81,12 @@ class TGraph:
         for v in self._V:
             for key, value in properties.items():
                 v.add_property(key, value)
+                
+    def add_edges_properties(self, properties: dict) -> None:
+        for u in self._E:
+            for e in u:
+                for key, value in properties.items():
+                    e.add_property(key, value)          
     
     def add_node_property(self, id: int, key: str, value: any) -> None:
         self._V[id].add_property(key, value)
@@ -116,16 +121,32 @@ class TGraph:
         
         return bst
     
-    def plot(self):
+    def plot(self,show_edges_properties = False, show_nodes_properties = False):
         
         G = nx.Graph()
         for u in self._V:
-            G.add_node(u._id)
+            G.add_node(u._id, **u)
         for u in self._E:
             for e in u:
-                G.add_edge(e._u._id, e._v._id)
-        nx.draw(G, with_labels=True)
+                G.add_edge(e._u._id, e._v._id, **e)
+        nx.draw(G, with_labels=True, arrows=True, arrowsize=20, arrowstyle='fancy')
+        
+        if show_edges_properties:
+            # Add edge properties as labels
+            edge_labels = {(e._u._id, e._v._id): e for u in self._E for e in u}
+            nx.draw_networkx_edge_labels(G,
+                                         pos=nx.spring_layout(G), 
+                                         edge_labels=edge_labels)
+        if show_nodes_properties:
+            # Add node properties as labels
+            node_labels = {u._id: u for u in self._V}
+            nx.draw_networkx_labels(G, 
+                                    pos=nx.spring_layout(G), 
+                                    labels=node_labels)
+        
         plt.show()
+        
+        return plt.gcf()
     
 if __name__ == '__main__':
     pass
