@@ -1,6 +1,8 @@
 from __future__ import annotations
-
-class MyNode(dict):
+import networkx as nx
+import matplotlib.pyplot as plt
+        
+class TNode(dict):
     
     def __init__(self, id) -> None:
         self._id = id
@@ -11,14 +13,14 @@ class MyNode(dict):
     def __hash__(self):
         return self._id
     
-    def __eq__(self, __other: MyNode) -> bool:
+    def __eq__(self, __other: TNode) -> bool:
         ids_equals = self._id == __other._id
         all_properties_equals = super().__eq__(__other)
         return ids_equals and all_properties_equals
     
-class MyEdge(dict):
+class TEdge(dict):
     
-    def __init__(self, id: int, u: MyNode, v: MyNode) -> None:
+    def __init__(self, id: int, u: TNode, v: TNode) -> None:
         self._u = u
         self._v = v
     
@@ -31,43 +33,43 @@ class MyEdge(dict):
         all_properties_equals = super().__eq__(__other)
         return nodes_equals and all_properties_equals
 
-class MyAdjacencyList(list):
+class TAdjacencyList(list):
 
-    def __init__(self, u: MyNode):
+    def __init__(self, u: TNode):
         self._u = u
 
-    def add_edge(self, e: MyEdge) -> None:
+    def add_edge(self, e: TEdge) -> None:
         self.append(e)
         
-    def __eq__(self, __other: MyAdjacencyList) -> bool:
+    def __eq__(self, __other: TAdjacencyList) -> bool:
         nodes_equals = self._u == __other._u
         all_elements_equals = super().__eq__(__other)
         return nodes_equals and all_elements_equals
         
-class MyGraph:
+class TGraph:
     
     def __init__(self, E = None, num_vertices = None) -> None:
         E = E if E else []
         max_node_index_in_E = max([max(e) for e in E])
         num_vertices = num_vertices if num_vertices else max_node_index_in_E + 1
         
-        self._V = [MyNode(i) for i in range(num_vertices)]
-        self._E = [MyAdjacencyList(u) for u in self._V]
+        self._V = [TNode(i) for i in range(num_vertices)]
+        self._E = [TAdjacencyList(u) for u in self._V]
         
         for i, (u, v) in enumerate(E):
-            edege = MyEdge(i, self._V[u], self._V[v])
+            edege = TEdge(i, self._V[u], self._V[v])
             self._E[u].add_edge(edege)
         
-    def get_node(self, id: int) -> MyNode:
+    def get_node(self, id: int) -> TNode:
         return self._V[id]
     
-    def get_node_adjacency(self, id: int) -> MyAdjacencyList:
+    def get_node_adjacency(self, id: int) -> TAdjacencyList:
         return self._E[id]
         
-    def copy(self) -> MyGraph:
+    def copy(self) -> TGraph:
         E = [(e._u._id, e._v._id) for u in self._E for e in u]
         num_vertices = len(self._V)
-        copied_graph = MyGraph(E, num_vertices)
+        copied_graph = TGraph(E, num_vertices)
         
         # Copy node properties
         for i, node in enumerate(self._V):
@@ -84,10 +86,10 @@ class MyGraph:
     def add_node_property(self, id: int, key: str, value: any) -> None:
         self._V[id].add_property(key, value)
     
-    def __eq__(self, other: MyGraph) -> bool:
+    def __eq__(self, other: TGraph) -> bool:
         return self._V == other._V and self._E == other._E
     
-    def get_bst(self, root_id: int) -> MyGraph:
+    def get_bst(self, root_id: int) -> TGraph:
         bst = self.copy()
         
         init_properties = {
@@ -113,6 +115,17 @@ class MyGraph:
             u["color"] = "black"
         
         return bst
+    
+    def plot(self):
+        
+        G = nx.Graph()
+        for u in self._V:
+            G.add_node(u._id)
+        for u in self._E:
+            for e in u:
+                G.add_edge(e._u._id, e._v._id)
+        nx.draw(G, with_labels=True)
+        plt.show()
     
 if __name__ == '__main__':
     pass

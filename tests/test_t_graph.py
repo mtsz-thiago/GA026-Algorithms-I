@@ -1,17 +1,17 @@
 import unittest
-from my_graph import MyGraph, MyNode, MyAdjacencyList, MyEdge
+from t_graph import TGraph, TNode, TAdjacencyList, TEdge
 
-class TestMyGraph(unittest.TestCase):
+class TestTyGraph(unittest.TestCase):
 
     def setUp(self):
         E1 = [(0, 1), (1, 2), (2, 3), (0, 4), (4, 5), (4,6)]
-        self.G1 = MyGraph(E1)
+        self.G1 = TGraph(E1)
         
         E2 = [(0, 1), (1, 2), (2, 3), (0, 4), (4, 5), (4,6)]
-        self.G2 = MyGraph(E2)
+        self.G2 = TGraph(E2)
         
         E3 = [(0, 1), (1, 2), (0, 4), (4, 5), (4, 6)]
-        self.G3 = MyGraph(E3)
+        self.G3 = TGraph(E3)
 
     def test_should_assert_property_was_added_to_node_0(self):
         node_id = 0
