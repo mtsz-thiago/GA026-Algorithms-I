@@ -40,18 +40,13 @@ class TestMyGraph(unittest.TestCase):
         
         expected = self.G1.copy()
         # add unreached nodes from root node 1
-        expected.add_node_property(0, "parent_id", None)
-        expected.add_node_property(0, "distance", None)
-        expected.add_node_property(0, "color", "white")
-        expected.add_node_property(4, "parent_id", None)
-        expected.add_node_property(4, "distance", None)
-        expected.add_node_property(4, "color", "white")
-        expected.add_node_property(5, "parent_id", None)
-        expected.add_node_property(5, "distance", None)
-        expected.add_node_property(5, "color", "white")
-        expected.add_node_property(6, "parent_id", None)
-        expected.add_node_property(6, "distance", None)
-        expected.add_node_property(6, "color", "white")
+        unreached_props = {
+            "parent_id": None,
+            "distance": None,
+            "color": "white"
+        }
+        
+        expected.add_node_properties(unreached_props)
         
         # add reached nodes from root node 1
         expected.add_node_property(1, "parent_id", None)
@@ -60,8 +55,8 @@ class TestMyGraph(unittest.TestCase):
         expected.add_node_property(2, "parent_id", 1)
         expected.add_node_property(2, "distance", 1)
         expected.add_node_property(2, "color", "black")
-        expected.add_node_property(3, "parent_id", 1)
-        expected.add_node_property(3, "distance", 1)
+        expected.add_node_property(3, "parent_id", 2)
+        expected.add_node_property(3, "distance", 2)
         expected.add_node_property(3, "color", "black")
         
         actual = self.G1.get_bst(1)
