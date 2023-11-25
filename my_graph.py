@@ -1,97 +1,118 @@
 from __future__ import annotations
 
-class MyGraphNode(dict):
+class MyNode(dict):
     
-    def __init__(self, id):
-        self.id = id
-        self._adj = []
+    def __init__(self, id) -> None:
+        self._id = id
     
-    def add_edge(self, v: MyGraphNode):
-        self._adj.append(v)
+    def add_property(self, key, value):
+        self[key] = value
     
-    def add_weighted_edge(self, v: MyGraphNode, w: float):
-        self._adj.append((v, w))
-        v.add_edge(self, w)
+    def __hash__(self):
+        return self._id
+    
+    def __eq__(self, __other: MyNode) -> bool:
+        ids_equals = self._id == __other._id
+        all_properties_equals = super().__eq__(__other)
+        return ids_equals and all_properties_equals
+    
+class MyEdge(dict):
+    
+    def __init__(self, id: int, u: MyNode, v: MyNode) -> None:
+        self._u = u
+        self._v = v
+    
+    def add_property(self, key, value):
+        self[key] = value
+        
+    
+    def __eq__(self, __other: object) -> bool:
+        nodes_equals = self._u == __other._u and self._v == __other._v
+        all_properties_equals = super().__eq__(__other)
+        return nodes_equals and all_properties_equals
 
-    def add_property(self, k: str, v: object):
-        self[k] = v
+class MyAdjacencyList(list):
 
-    def __eq__(self, other):
-        ids_match = self.id == other.id
-        adj_match = self._adj == other._adj
-        properties_match = self.items() == other.items()
-        return ids_match and adj_match and properties_match
-    
-    def copy(self) -> MyGraphNode:
-        copy = MyGraphNode(self.id)
-        copy._adj = self._adj.copy()
-        copy._adj = self._adj.copy()
-        return copy
+    def __init__(self, u: MyNode):
+        self._u = u
 
+    def add_edge(self, e: MyEdge) -> None:
+        self.append(e)
+        
+    def __eq__(self, __other: MyAdjacencyList) -> bool:
+        nodes_equals = self._u == __other._u
+        all_elements_equals = super().__eq__(__other)
+        return nodes_equals and all_elements_equals
+        
 class MyGraph:
     
-    def __init__(self, E: list[tuple[int,int]] = [], num_vertices: int = None):
+    def __init__(self, E = None, num_vertices = None) -> None:
+        E = E if E else []
+        max_node_index_in_E = max([max(e) for e in E])
+        num_vertices = num_vertices if num_vertices else max_node_index_in_E + 1
         
-        self.num_vertices = num_vertices
-        if num_vertices is None:
-            self.num_vertices = max([max(e) for e in E]) + 1 if len(E) > 0 else 0
+        self._V = [MyNode(i) for i in range(num_vertices)]
+        self._E = [MyAdjacencyList(u) for u in self._V]
         
-        self._adj = [MyGraphNode(i) for i in range(self.num_vertices)]
+        for i, (u, v) in enumerate(E):
+            edege = MyEdge(i, self._V[u], self._V[v])
+            self._E[u].add_edge(edege)
         
-        for e in E:
-            self._adj[e[0]].add_edge(self._adj[e[1]])
-            self._adj[e[1]].add_edge(self._adj[e[0]])
-
-    def set_weights(self, u: int, v: int, w: float):
-        self._adj[u].add_weighted_edge(self._adj[v], w)
+    def get_node(self, id: int) -> MyNode:
+        return self._V[id]
     
-    def copy(self):
-        copy = MyGraph()
-        copy._adj = [v.copy() for v in self._adj]
-        copy.num_vertices = self.num_vertices
-        return copy
+    def get_node_adjacency(self, id: int) -> MyAdjacencyList:
+        return self._E[id]
+        
+    def copy(self) -> MyGraph:
+        E = [(e._u._id, e._v._id) for u in self._E for e in u]
+        num_vertices = len(self._V)
+        copied_graph = MyGraph(E, num_vertices)
+        
+        # Copy node properties
+        for i, node in enumerate(self._V):
+            for key, value in node.items():
+                copied_graph.add_node_property(i, key, value)
+        
+        return copied_graph
     
-    def add_node_properties(self, node_properties: dict[int, tuple[str, object]]):
-        for k, v in node_properties.items():
-            self._adj[k].add_property(v[0],v[1])
+    def add_node_properties(self, properties: dict) -> None:
+        for v in self._V:
+            for key, value in properties.items():
+                v.add_property(key, value)
     
-    def __eq__(self, other):
-        adj_match = all([u == v for u, v in zip(self._adj, other._adj)])
-        return adj_match and self.num_vertices == other.num_vertices
+    def add_node_property(self, id: int, key: str, value: any) -> None:
+        self._V[id].add_property(key, value)
     
-    def get_bst(self, v: int) -> MyGraph:
-        spanning_tree = self.copy()
+    def __eq__(self, other: MyGraph) -> bool:
+        return self._V == other._V and self._E == other._E
+    
+    def get_bst(self, root_id: int) -> MyGraph:
+        bst = self.copy()
         
-        # initialize spanning tree properties
-        parents = {v: ('parent', None) for v in range(self.num_vertices)}
-        distances = {v: ('distance', None) for v in range(self.num_vertices)}
-        colors = {v: ('color', 'white') for v in range(self.num_vertices)}
-        spanning_tree.add_node_properties(parents)
-        spanning_tree.add_node_properties(distances)
-        spanning_tree.add_node_properties(colors)
+        init_properties = {
+            'parent_id': None,
+            'distance': None,
+            'color': 'white'
+        } 
+        bst.add_node_properties(init_properties)
         
-        # initialize root
-        v_node = spanning_tree._adj[v]
-        v_node["color"] = 'gray'
-        v_node["distance"] = 0
-        queue = [v_node]
-        while queue:
-            u = queue.pop(0)
-            
-            if u['color'] == 'black':
-                continue
-            
-            for v in u._adj:
-                if v['color'] == 'white':
-                    v['color'] = 'gray'
-                    v['distance'] = u['distance'] + 1
-                    v['parent'] = u
-                    queue.append(v)
-            u['color'] = 'black'
+        root = bst.get_node(root_id)
+        root["color"] = "gray"
+        root["distance"] = 0
+        to_visit_stack = [root]
+        while len(to_visit_stack) > 0:
+            u = to_visit_stack.pop()
+            for e in bst.get_node_adjacency(u._id):
+                v = e._v
+                if v["color"] == "white":
+                    v["parent_id"] = u._id
+                    v["distance"] = u["distance"] + 1
+                    v["color"] = "gray"
+                    to_visit_stack.append(v) 
+            u["color"] = "black"
         
-        return spanning_tree
-        
-
+        return bst
+    
 if __name__ == '__main__':
     pass
-        
