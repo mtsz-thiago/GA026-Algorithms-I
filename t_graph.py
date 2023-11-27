@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Iterable
 import networkx as nx
 import matplotlib.pyplot as plt
         
@@ -18,19 +19,19 @@ class TNode(dict):
         all_properties_equals = super().__eq__(__other)
         return ids_equals and all_properties_equals
     
-class TEdge(dict):
+class TEdge(tuple[TNode, dict]):
     
-    def __init__(self, id: int, u: TNode, v: TNode) -> None:
-        self._u = u
-        self._v = v
+    def __new__(cls, n: TNode, props: dict):
+        return super().__new__(cls, (n, props))
     
     def add_property(self, key, value):
-        self[key] = value
+        self[1][key] = value
+    
+    def get_property(self, key):
+        return self[1][key]
     
     def __eq__(self, __other: object) -> bool:
-        nodes_equals = self._u == __other._u and self._v == __other._v
-        all_properties_equals = super().__eq__(__other)
-        return nodes_equals and all_properties_equals
+        return self[1] == __other[1]
 
 class TAdjacencyList(list):
 
@@ -44,6 +45,12 @@ class TAdjacencyList(list):
         nodes_equals = self._u == __other._u
         all_elements_equals = super().__eq__(__other)
         return nodes_equals and all_elements_equals
+    
+    def get_edge(self, v: int) -> TEdge:
+        for e in self:
+            if e[0]._id == v:
+                return e
+        return None
         
 class TGraph:
     
@@ -56,8 +63,12 @@ class TGraph:
         self._E = [TAdjacencyList(u) for u in self._V]
         
         for i, (u, v) in enumerate(E):
-            edege = TEdge(i, self._V[u], self._V[v])
-            self._E[u].add_edge(edege)
+            if self._E[u].get_edge(v) is None:
+                props = {}
+                edege_f = TEdge(self._V[v], props)
+                edege_b = TEdge(self._V[u], props)
+                self._E[u].add_edge(edege_f)
+                self._E[v].add_edge(edege_b)
         
     def get_node(self, id: int) -> TNode:
         return self._V[id]
@@ -66,7 +77,7 @@ class TGraph:
         return self._E[id]
         
     def copy(self) -> TGraph:
-        E = [(e._u._id, e._v._id) for u in self._E for e in u]
+        E = [(u_adj._u._id, e[0]._id) for u_adj in self._E for e in u_adj]
         num_vertices = len(self._V)
         copied_graph = TGraph(E, num_vertices)
         
@@ -74,6 +85,11 @@ class TGraph:
         for i, node in enumerate(self._V):
             for key, value in node.items():
                 copied_graph.add_node_property(i, key, value)
+        
+        for u in self._E:
+            for e in u:
+                for key, value in e[1].items():
+                    copied_graph.add_edge_property(e._u._id, e._v._id, key, value)
         
         return copied_graph
     
@@ -93,13 +109,13 @@ class TGraph:
         
     def add_edge_property(self, u: int, v: int, key: str, value: any) -> None:
         for e in self._E[u]:
-            if e._v._id == v:
+            if e[0]._id == v:
                 e.add_property(key, value)
                 return
                 
     def get_edge(self, u: int, v: int) -> TEdge:
         for e in self._E[u]:
-            if e._v._id == v:
+            if e[0]._id == v:
                 return e
         return None
     
@@ -123,7 +139,7 @@ class TGraph:
         while len(to_visit_stack) > 0:
             u = to_visit_stack.pop()
             for e in bst.get_node_adjacency(u._id):
-                v = e._v
+                v = e[0]
                 if v["color"] == "white":
                     v["parent_id"] = u._id
                     v["distance"] = u["distance"] + 1
@@ -141,11 +157,11 @@ class TGraph:
         for u in self._E:
             for e in u:
                 G.add_edge(e._u._id, e._v._id, **e)
-        nx.draw(G, with_labels=True, arrows=True, arrowsize=20, arrowstyle='fancy')
+        nx.draw(G, with_labels=True)
         
         if show_edges_properties:
             # Add edge properties as labels
-            edge_labels = {(e._u._id, e._v._id): e for u in self._E for e in u}
+            edge_labels = {(u._id, e[0]._id): e for u in self._E for e in u}
             nx.draw_networkx_edge_labels(G,
                                          pos=nx.spring_layout(G), 
                                          edge_labels=edge_labels)

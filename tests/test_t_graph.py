@@ -49,6 +49,9 @@ class TestTyGraph(unittest.TestCase):
         expected.add_node_properties(unreached_props)
         
         # add reached nodes from root node 1
+        expected.add_node_property(0, "parent_id", 1)
+        expected.add_node_property(0, "distance", 1)
+        expected.add_node_property(0, "color", "black")
         expected.add_node_property(1, "parent_id", None)
         expected.add_node_property(1, "distance", 0)
         expected.add_node_property(1, "color", "black")
@@ -58,6 +61,15 @@ class TestTyGraph(unittest.TestCase):
         expected.add_node_property(3, "parent_id", 2)
         expected.add_node_property(3, "distance", 2)
         expected.add_node_property(3, "color", "black")
+        expected.add_node_property(4, "parent_id", 0)
+        expected.add_node_property(4, "distance", 2)
+        expected.add_node_property(4, "color", "black")
+        expected.add_node_property(5, "parent_id", 4)
+        expected.add_node_property(5, "distance", 3)
+        expected.add_node_property(5, "color", "black")
+        expected.add_node_property(6, "parent_id", 4)
+        expected.add_node_property(6, "distance", 3)
+        expected.add_node_property(6, "color", "black")
         
         actual = self.G1.get_bst(1)
         
@@ -70,7 +82,11 @@ class TestTyGraph(unittest.TestCase):
         value = 10
         
         self.G1.add_edge_property(edge_u_id, edge_v_id, key, value)
-        self.assertEqual(self.G1.get_edge(edge_u_id, edge_v_id)[key], value)
+        modified_edge_f = self.G1.get_edge(edge_u_id, edge_v_id)
+        modified_edge_b = self.G1.get_edge(edge_v_id, edge_u_id)
+        
+        self.assertEqual(modified_edge_f, modified_edge_b)
+        self.assertEqual(modified_edge_f.get_property(key), value)
 
 if __name__ == '__main__':
     unittest.main()
