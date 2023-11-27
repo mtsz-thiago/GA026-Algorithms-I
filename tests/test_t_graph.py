@@ -35,6 +35,33 @@ class TestTyGraph(unittest.TestCase):
         value = "blue"
         self.G2.add_node_property(node_id, key, value)
         self.assertNotEqual(self.G1, self.G2)
+    
+    
+    def test_should_assert_property_was_added_to_edge(self):
+        edge_u_id = 0
+        edge_v_id = 1
+        key = "weight"
+        value = 10
+        
+        self.G1.add_edge_property(edge_u_id, edge_v_id, key, value)
+        modified_edge_f = self.G1.get_edge(edge_u_id, edge_v_id)
+        modified_edge_b = self.G1.get_edge(edge_v_id, edge_u_id)
+        
+        self.assertEqual(modified_edge_f, modified_edge_b)
+        self.assertEqual(modified_edge_f.get_property(key), value)
+        
+    def test_should_assert_modfying_u_v_also_modifies_v_u_edges(self):
+        edge_u_id = 0
+        edge_v_id = 1
+        
+        key = "weight"
+        value = 10
+        self.G1.add_edge_property(edge_u_id, edge_v_id, key, value)
+
+        edge_f = self.G1.get_edge(edge_u_id, edge_v_id)
+        edge_b = self.G1.get_edge(edge_v_id, edge_u_id)
+        
+        self.assertEqual(edge_f, edge_b)
         
     def test_should_assert_bst_was_found_from_root_node_1(self):
         
@@ -74,19 +101,6 @@ class TestTyGraph(unittest.TestCase):
         actual = self.G1.get_bst(1)
         
         self.assertEqual(actual, expected) 
-
-    def test_should_assert_property_was_added_to_edge(self):
-        edge_u_id = 0
-        edge_v_id = 1
-        key = "weight"
-        value = 10
-        
-        self.G1.add_edge_property(edge_u_id, edge_v_id, key, value)
-        modified_edge_f = self.G1.get_edge(edge_u_id, edge_v_id)
-        modified_edge_b = self.G1.get_edge(edge_v_id, edge_u_id)
-        
-        self.assertEqual(modified_edge_f, modified_edge_b)
-        self.assertEqual(modified_edge_f.get_property(key), value)
 
 if __name__ == '__main__':
     unittest.main()

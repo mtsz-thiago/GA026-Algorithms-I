@@ -1,7 +1,9 @@
 from __future__ import annotations
 from collections.abc import Iterable
 import networkx as nx
+import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
         
 class TNode(dict):
     
@@ -15,9 +17,8 @@ class TNode(dict):
         return self._id
     
     def __eq__(self, __other: TNode) -> bool:
-        ids_equals = self._id == __other._id
         all_properties_equals = super().__eq__(__other)
-        return ids_equals and all_properties_equals
+        return all_properties_equals
     
 class TEdge(tuple[TNode, dict]):
     
@@ -63,33 +64,39 @@ class TGraph:
         self._E = [TAdjacencyList(u) for u in self._V]
         
         for i, (u, v) in enumerate(E):
-            if self._E[u].get_edge(v) is None:
-                props = {}
-                edege_f = TEdge(self._V[v], props)
-                edege_b = TEdge(self._V[u], props)
-                self._E[u].add_edge(edege_f)
-                self._E[v].add_edge(edege_b)
-        
+            self.add_edge(u, v)
+    
+    def add_edge(self, u: int, v: int) -> None:
+        if self._E[u].get_edge(v) is None:
+            props = {}
+            edege_f = TEdge(self._V[v], props)
+            edege_b = TEdge(self._V[u], props)
+            self._E[u].add_edge(edege_f)
+            self._E[v].add_edge(edege_b)
+    
     def get_node(self, id: int) -> TNode:
         return self._V[id]
     
     def get_node_adjacency(self, id: int) -> TAdjacencyList:
         return self._E[id]
-        
+    
+    def copy_node_properties(self, other: TGraph) -> None:
+        for i, node in enumerate(self._V):
+            for key, value in other._V[i].items():
+                node.add_property(key, value)
+    
+    def copy_edges_properties(self, other: TGraph) -> None:
+        for u in self._E:
+            for e in u:
+                for key, value in e[1].items():
+                    other.add_edge_property(e._u._id, e._v._id, key, value)
+    
     def copy(self) -> TGraph:
         E = [(u_adj._u._id, e[0]._id) for u_adj in self._E for e in u_adj]
         num_vertices = len(self._V)
         copied_graph = TGraph(E, num_vertices)
-        
-        # Copy node properties
-        for i, node in enumerate(self._V):
-            for key, value in node.items():
-                copied_graph.add_node_property(i, key, value)
-        
-        for u in self._E:
-            for e in u:
-                for key, value in e[1].items():
-                    copied_graph.add_edge_property(e._u._id, e._v._id, key, value)
+        copied_graph.copy_node_properties(self)
+        copied_graph.copy_edges_properties(self)
         
         return copied_graph
     
@@ -149,31 +156,35 @@ class TGraph:
         
         return bst
     
-    def plot(self,show_edges_properties = False, show_nodes_properties = False):
+    def prims_mst(self, root_id: int = 0) -> TGraph:
+        mst = self
         
+        return mst
+    
+    def plot(self, nodes_properties=False, edges_properties=False):
+
         G = nx.Graph()
-        for u in self._V:
-            G.add_node(u._id, **u)
-        for u in self._E:
-            for e in u:
-                G.add_edge(e._u._id, e._v._id, **e)
+
+        # Add nodes
+        for node in self._V:
+            G.add_node(node._id)
+            if edges_properties:
+                for key, value in node.items():
+                    G.nodes[node._id][key] = value
+
+        # Add edges
+        for edges in self._E:
+            u = edges._u._id
+            for edge in edges:
+                v = edge[0]._id
+                G.add_edge(u, v)
+                if nodes_properties:
+                    for key, value in edge[1].items():
+                        G.edges[(u, v)][key] = value
+
         nx.draw(G, with_labels=True)
-        
-        if show_edges_properties:
-            # Add edge properties as labels
-            edge_labels = {(u._id, e[0]._id): e for u in self._E for e in u}
-            nx.draw_networkx_edge_labels(G,
-                                         pos=nx.spring_layout(G), 
-                                         edge_labels=edge_labels)
-        if show_nodes_properties:
-            # Add node properties as labels
-            node_labels = {u._id: u for u in self._V}
-            nx.draw_networkx_labels(G, 
-                                    pos=nx.spring_layout(G), 
-                                    labels=node_labels)
-        
         plt.show()
-        
+
         return plt.gcf()
     
 if __name__ == '__main__':
