@@ -90,6 +90,18 @@ class TGraph:
     
     def add_node_property(self, id: int, key: str, value: any) -> None:
         self._V[id].add_property(key, value)
+        
+    def add_edge_property(self, u: int, v: int, key: str, value: any) -> None:
+        for e in self._E[u]:
+            if e._v._id == v:
+                e.add_property(key, value)
+                return
+                
+    def get_edge(self, u: int, v: int) -> TEdge:
+        for e in self._E[u]:
+            if e._v._id == v:
+                return e
+        return None
     
     def __eq__(self, other: TGraph) -> bool:
         return self._V == other._V and self._E == other._E

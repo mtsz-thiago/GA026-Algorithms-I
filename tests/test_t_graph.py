@@ -63,5 +63,14 @@ class TestTyGraph(unittest.TestCase):
         
         self.assertEqual(actual, expected) 
 
+    def test_should_assert_property_was_added_to_edge(self):
+        edge_u_id = 0
+        edge_v_id = 1
+        key = "weight"
+        value = 10
+        
+        self.G1.add_edge_property(edge_u_id, edge_v_id, key, value)
+        self.assertEqual(self.G1.get_edge(edge_u_id, edge_v_id)[key], value)
+
 if __name__ == '__main__':
     unittest.main()
