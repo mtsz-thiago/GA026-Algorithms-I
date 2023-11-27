@@ -66,11 +66,10 @@ class TGraph:
         for i, (u, v) in enumerate(E):
             self.add_edge(u, v)
     
-    def add_edge(self, u: int, v: int) -> None:
+    def add_edge(self, u: int, v: int, edge_properties: dict = {}) -> None:
         if self._E[u].get_edge(v) is None:
-            props = {}
-            edege_f = TEdge(self._V[v], props)
-            edege_b = TEdge(self._V[u], props)
+            edege_f = TEdge(self._V[v], edge_properties)
+            edege_b = TEdge(self._V[u], edge_properties)
             self._E[u].add_edge(edege_f)
             self._E[v].add_edge(edege_b)
     

@@ -36,6 +36,21 @@ class TestTyGraph(unittest.TestCase):
         self.G2.add_node_property(node_id, key, value)
         self.assertNotEqual(self.G1, self.G2)
     
+    def test_should_add_an_edge_with_properties_to_graph(self):
+        edege_u = 0
+        edge_v = 6
+        edge_properties = {
+            "weight": 10
+        }
+        
+        self.G1.add_edge(edege_u, edge_v, edge_properties)
+        modified_edge_f = self.G1.get_edge(edege_u, edge_v)
+        modified_edge_b = self.G1.get_edge(edge_v, edege_u) 
+        
+        self.assertEqual(modified_edge_f, modified_edge_b)
+        self.assertEqual(modified_edge_f.get_property("weight"), edge_properties["weight"])
+        
+        
     
     def test_should_assert_property_was_added_to_edge(self):
         edge_u_id = 0
