@@ -12,6 +12,13 @@ class TestTyGraph(unittest.TestCase):
         
         E3 = [(0, 1), (1, 2), (0, 4), (4, 5), (4, 6)]
         self.G3 = TGraph(E3)
+        
+        E_full = [(0,1), (0,2), (0,3), (0,4), 
+                  (1,2), (1,3), (1,4), 
+                  (2,3), (2,4),
+                  (3,4)
+                  ]
+        self.G_full = TGraph(E_full)
 
     def test_should_assert_property_was_added_to_node_0(self):
         node_id = 0
@@ -115,7 +122,34 @@ class TestTyGraph(unittest.TestCase):
         
         actual = self.G1.get_bst(1)
         
-        self.assertEqual(actual, expected) 
+        self.assertEqual(actual, expected)
+    
+    def test_should_assert_prims_algorithm_really_returns_mst(self):
+        import itertools
+        vertices_indexes = list(range(0, self.G_full.get_num_vertices()))
+        for u, v in itertools.product(vertices_indexes,vertices_indexes):
+            if u != v:
+                self.G_full.add_edge_property(u, v, "weight", (u+v)%5)
+        
+        expected = TGraph([(0, 1), (1, 4), (4, 2), (2, 3)])
+        expected.add_node_property(0, "key", 0)
+        expected.add_node_property(0, "pi", None)
+        expected.add_edge_property(0, 1, "weight", 1)
+        expected.add_node_property(1, "key", 1)
+        expected.add_node_property(1, "pi", 0)
+        expected.add_edge_property(1, 4, "weight", 0)
+        expected.add_node_property(4, "key", 0)
+        expected.add_node_property(4, "pi", 1)
+        expected.add_edge_property(4, 2, "weight", 1)
+        expected.add_node_property(2, "key", 1)
+        expected.add_node_property(2, "pi", 4)
+        expected.add_edge_property(2, 3, "weight", 0)
+        expected.add_node_property(3, "key", 0)
+        expected.add_node_property(3, "pi", 2)
+        
+        actual = self.G_full.prims_mst(0) 
+        
+        self.assertEqual(actual, expected)
 
 if __name__ == '__main__':
     unittest.main()

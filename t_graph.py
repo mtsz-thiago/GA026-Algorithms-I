@@ -4,6 +4,7 @@ import networkx as nx
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
         
 class TNode(dict):
     
@@ -19,6 +20,12 @@ class TNode(dict):
     def __eq__(self, __other: TNode) -> bool:
         all_properties_equals = super().__eq__(__other)
         return all_properties_equals
+    
+    def copy(self) -> TNode:
+        copied = TNode(self._id)
+        for key, value in self.items():
+            copied.add_property(key, value)
+        return copied
     
 class TEdge(tuple[TNode, dict]):
     
@@ -57,7 +64,7 @@ class TGraph:
     
     def __init__(self, E = None, num_vertices = None) -> None:
         E = E if E else []
-        max_node_index_in_E = max([max(e) for e in E])
+        max_node_index_in_E = max([max(e) for e in E]) if len(E) > 0 else -1
         num_vertices = num_vertices if num_vertices else max_node_index_in_E + 1
         
         self._V = [TNode(i) for i in range(num_vertices)]
@@ -66,8 +73,9 @@ class TGraph:
         for i, (u, v) in enumerate(E):
             self.add_edge(u, v)
     
-    def add_edge(self, u: int, v: int, edge_properties: dict = {}) -> None:
+    def add_edge(self, u: int, v: int, edge_properties: dict = None) -> None:
         if self._E[u].get_edge(v) is None:
+            edge_properties = edge_properties if edge_properties else {}
             edege_f = TEdge(self._V[v], edge_properties)
             edege_b = TEdge(self._V[u], edge_properties)
             self._E[u].add_edge(edege_f)
@@ -76,10 +84,16 @@ class TGraph:
     def get_node(self, id: int) -> TNode:
         return self._V[id]
     
+    def get_num_vertices(self) -> int:
+        return len(self._V)
+    
+    def get_num_edges(self) -> int:
+        return sum([len(u) for u in self._E]) 
+    
     def get_node_adjacency(self, id: int) -> TAdjacencyList:
         return self._E[id]
     
-    def copy_node_properties(self, other: TGraph) -> None:
+    def copy_nodes_properties(self, other: TGraph) -> None:
         for i, node in enumerate(self._V):
             for key, value in other._V[i].items():
                 node.add_property(key, value)
@@ -94,7 +108,7 @@ class TGraph:
         E = [(u_adj._u._id, e[0]._id) for u_adj in self._E for e in u_adj]
         num_vertices = len(self._V)
         copied_graph = TGraph(E, num_vertices)
-        copied_graph.copy_node_properties(self)
+        copied_graph.copy_nodes_properties(self)
         copied_graph.copy_edges_properties(self)
         
         return copied_graph
@@ -156,7 +170,38 @@ class TGraph:
         return bst
     
     def prims_mst(self, root_id: int = 0) -> TGraph:
-        mst = self
+        
+        mst = TGraph(num_vertices=self.get_num_vertices())
+        mst.copy_nodes_properties(self)
+        for v in mst._V:
+            mst.add_node_property(v._id, 'pi', None)
+            mst.add_node_property(v._id, 'key', sys.float_info.max)
+        
+        mst.add_node_property(root_id, 'key', 0)
+        Q = [n for n in mst._V]
+        
+        while len(Q) > 0:
+        
+            # get node with min edge weight crossing the cut
+            u = min(Q, key=lambda x: x['key'])
+            
+            # add safe edge to tree, must gard against root on first loop
+            if u._id != root_id:
+                edge_propeties = self.get_edge(u['pi'], u._id)[1]
+                mst.add_edge(u['pi'], u._id, edge_propeties)    
+            
+            # update edges weights == keys crossing the cut via u    
+            for edge in self._E[u._id]:
+                v_id = edge[0]._id
+                v = mst.get_node(v_id)
+                q_ids = [n._id for n in Q]
+                
+                if v._id in q_ids and edge.get_property('weight') < v['key']:
+                    v['pi'] = u._id
+                    v['key'] = edge.get_property('weight')
+            
+            # remove u from Q
+            Q = [n for n in Q if n._id != u._id]
         
         return mst
     
