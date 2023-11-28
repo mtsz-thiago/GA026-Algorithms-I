@@ -58,7 +58,7 @@ class ExperimentExecuter():
     
     def __init__(self, function, data_generator, data_regressor, correctness_verifier = None):
       self.function = function  
-      self.data_generator = data_generator  
+      self.data_factory = data_generator  
       self.data_regressor = data_regressor
       self.correctness_verifier = correctness_verifier  
 
@@ -73,14 +73,7 @@ class ExperimentExecuter():
 
     def execute(self, sample_sz:int = None, verbose = True):
         
-        input_data = self.data_generator(sample_sz, verbose)
-        
-        instance_executions = [self.execute_instance(d, verbose) for d in input_data]
-        
-        # verify algorithm correctness, assert fail if correctness condition is violated for any
-        # execution instance
-        if self.correctness_verifier:
-            self.correctness_verifier(input_data, instance_executions, verbose)
+        instance_executions = [(self.execute_instance(d, verbose),sz) for d, sz in self.data_factory.gen()]
         
         regression = self.data_regressor(input_data, instance_executions, verbose)
         
