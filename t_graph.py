@@ -90,7 +90,7 @@ class TGraph:
         return len(self._V)
     
     def get_num_edges(self) -> int:
-        return sum([len(u) for u in self._E]) 
+        return sum([len(u) for u in self._E]) //2
     
     def get_node_adjacency(self, id: int) -> TAdjacencyList:
         return self._E[id]
@@ -258,6 +258,6 @@ class TGraph:
         plt.show()
 
         return plt.gcf()
-    
+
 if __name__ == '__main__':
     pass

@@ -174,5 +174,8 @@ class TestTyGraph(unittest.TestCase):
         
         self.assertEqual(actual, expected)
 
+    def test_should_assert_methods_dont_throw_exception_when_graph_is_not_connected(self):
+        self.assertEqual(False)
+
 if __name__ == '__main__':
     unittest.main()
