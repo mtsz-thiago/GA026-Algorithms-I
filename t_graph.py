@@ -51,7 +51,9 @@ class TAdjacencyList(list):
         
     def __eq__(self, __other: TAdjacencyList) -> bool:
         nodes_equals = self._u == __other._u
-        all_elements_equals = super().__eq__(__other)
+        self_edges = sorted(self, key=lambda x: x[0]._id)
+        other_edges = sorted(__other, key=lambda x: x[0]._id)
+        all_elements_equals = (self_edges == other_edges)
         return nodes_equals and all_elements_equals
     
     def get_edge(self, v: int) -> TEdge:
@@ -169,7 +171,7 @@ class TGraph:
         
         return bst
     
-    def prims_mst(self, root_id: int = 0) -> TGraph:
+    def prims_mst(self, root_id: int = 0, weight_property = "weight") -> TGraph:
         
         mst = TGraph(num_vertices=self.get_num_vertices())
         mst.copy_nodes_properties(self)
@@ -196,13 +198,39 @@ class TGraph:
                 v = mst.get_node(v_id)
                 q_ids = [n._id for n in Q]
                 
-                if v._id in q_ids and edge.get_property('weight') < v['key']:
+                if v._id in q_ids and edge.get_property(weight_property) < v['key']:
                     v['pi'] = u._id
-                    v['key'] = edge.get_property('weight')
+                    v['key'] = edge.get_property(weight_property)
             
             # remove u from Q
             Q = [n for n in Q if n._id != u._id]
         
+        return mst
+    
+    def get_list_of_edges(self) -> list[tuple[int, int, TEdge]]:
+        return [(u_adj._u._id, e[0]._id, e) for u_adj in self._E for e in u_adj if e[0]._id >= u_adj._u._id]
+    
+    def kruskal_mst(self, roo_id: int = 0, weight_property = "weight") -> TGraph:
+        
+        mst = TGraph(num_vertices=self.get_num_vertices())
+        mst.copy_nodes_properties(self)
+        
+        node_component_map = {v._id: i for i, v in enumerate(mst._V)} 
+        forest = [set([v._id]) for v in mst._V]
+        edges = self.get_list_of_edges()
+        
+        sorted_edges = sorted(edges, key=lambda x: x[2][1][weight_property])
+        
+        for u_id, e_id, edge in sorted_edges:
+            component_u = node_component_map[u_id]
+            component_v = node_component_map[e_id]
+            if component_u != component_v:
+                mst.add_edge(u_id, e_id, edge[1])
+                forest[component_u] = forest[component_u].union(forest[component_v])
+                for v_id in forest[component_v]:
+                    node_component_map[v_id] = component_u
+                forest[component_v] = set()
+            
         return mst
     
     def plot(self, nodes_properties=False, edges_properties=False):

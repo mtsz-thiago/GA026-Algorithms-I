@@ -13,12 +13,12 @@ class TestTyGraph(unittest.TestCase):
         E3 = [(0, 1), (1, 2), (0, 4), (4, 5), (4, 6)]
         self.G3 = TGraph(E3)
         
-        E_full = [(0,1), (0,2), (0,3), (0,4), 
+        self.E_full = [(0,1), (0,2), (0,3), (0,4), 
                   (1,2), (1,3), (1,4), 
                   (2,3), (2,4),
                   (3,4)
                   ]
-        self.G_full = TGraph(E_full)
+        self.G_full = TGraph(self.E_full)
 
     def test_should_assert_property_was_added_to_node_0(self):
         node_id = 0
@@ -26,6 +26,12 @@ class TestTyGraph(unittest.TestCase):
         value = "red"
         self.G1.get_node(node_id).add_property(key, value)
         self.assertEqual(self.G1.get_node(node_id)[key], value)
+        
+    def test_should_assert_list_of_edges_has_no_duplicate(self):
+        expected_ids = self.E_full
+        actual = self.G_full.get_list_of_edges()
+        actual_ids = [(e[0], e[1]) for e in actual]
+        self.assertEqual(expected_ids, actual_ids)
         
     def test_should_assert_graph_equals(self):
         self.assertEqual(self.G1, self.G2)
@@ -148,6 +154,23 @@ class TestTyGraph(unittest.TestCase):
         expected.add_node_property(3, "pi", 2)
         
         actual = self.G_full.prims_mst(0) 
+        
+        self.assertEqual(actual, expected)
+        
+    def test_should_assert_kruskals_algorithm_really_returns_mst(self):
+        import itertools
+        vertices_indexes = list(range(0, self.G_full.get_num_vertices()))
+        for u, v in itertools.product(vertices_indexes,vertices_indexes):
+            if u != v:
+                self.G_full.add_edge_property(u, v, "weight", (u+v)%5)
+        
+        expected = TGraph([(0, 1), (1, 4), (4, 2), (2, 3)])
+        expected.add_edge_property(0, 1, "weight", 1)
+        expected.add_edge_property(1, 4, "weight", 0)
+        expected.add_edge_property(4, 2, "weight", 1)
+        expected.add_edge_property(2, 3, "weight", 0)
+        
+        actual = self.G_full.kruskal_mst(0) 
         
         self.assertEqual(actual, expected)
 
