@@ -5,6 +5,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+import itertools
         
 class TNode(dict):
     
@@ -258,6 +259,40 @@ class TGraph:
         plt.show()
 
         return plt.gcf()
+
+class WeightedGraphFactory():
+    
+    def __init__(self, num_vertices_range, num_edges_range,
+                 weight_max = sys.float_info.max, weight_min = sys.float_info.min):
+        self.num_vertices_range = num_vertices_range
+        self.num_edges_range = num_edges_range
+        self.weight_max = weight_max
+        self.weight_min = weight_min
+    
+    def create_graph(self, num_vertices: int, num_edges: int) -> TGraph:
+        
+        weights = np.random.random((int(num_edges), 1))
+        weights = weights * (self.weight_max - self.weight_min) + self.weight_min
+        
+        vertices_list = list(range(0,num_vertices))
+        vertices_space = itertools.product(vertices_list, vertices_list)
+        vertices_space = [e for e in vertices_space if e[0] > e[1]]
+        a_vertices_space = range(0, len(vertices_space))
+        
+        assert len(a_vertices_space) >= num_edges, f"{num_edges} edges are too many for {num_vertices} vertices."
+        
+        chosen = np.random.choice(a_vertices_space, num_edges, replace=False)
+        E_list = [vertices_space[i] for i in chosen]
+        
+        new_graph = TGraph(E_list, num_vertices=num_vertices)
+        for i, e in enumerate(E_list):
+            new_graph.add_edge_property(e[0], e[1], "weight", weights[i])
+        
+        return new_graph
+    
+    def __iter__(self) -> TGraph:
+        for num_vertices, num_edges in zip(self.num_vertices_range,self.num_edges_range):
+            yield self.create_graph(num_vertices, num_edges)
 
 if __name__ == '__main__':
     pass
