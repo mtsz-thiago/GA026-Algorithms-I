@@ -1,5 +1,13 @@
 import time
 import resource
+import os
+import psutil
+ 
+# inner psutil function
+def process_memory():
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    return mem_info.rss
 
 from dataclasses import dataclass
 
@@ -18,15 +26,17 @@ def measure_performance(func, verbose=False):
     def wrapper(*args, **kwargs):
         start_time = time.time()
         start_resources = resource.getrusage(resource.RUSAGE_SELF)
+        mem_before = process_memory()
 
         result = func(*args, **kwargs)
 
+        mem_after = process_memory()
         end_time = time.time()
         end_resources = resource.getrusage(resource.RUSAGE_SELF)
 
         elapsed_time = 1000*(end_time - start_time)
         cpu_time = 1000*(end_resources.ru_utime - start_resources.ru_utime)
-        memory_usage = (end_resources.ru_maxrss - start_resources.ru_maxrss)
+        memory_usage = mem_after - mem_before
         measure = PerformanceMeasure(elapsed_time, cpu_time, memory_usage)
 
         g = args[0]
