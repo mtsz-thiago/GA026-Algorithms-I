@@ -181,6 +181,7 @@ class TGraph:
             mst.add_node_property(v._id, 'key', sys.float_info.max)
         
         mst.add_node_property(root_id, 'key', 0)
+        mst.add_node_property(root_id, 'pi', None)
         Q = [n for n in mst._V]
         
         while len(Q) > 0:
@@ -188,8 +189,8 @@ class TGraph:
             # get node with min edge weight crossing the cut
             u = min(Q, key=lambda x: x['key'])
             
-            # add safe edge to tree, must gard against root on first loop
-            if u._id != root_id:
+            # add safe edge to tree, must guard against root on first loop
+            if u['pi'] is not None:
                 edge_propeties = self.get_edge(u['pi'], u._id)[1]
                 mst.add_edge(u['pi'], u._id, edge_propeties)    
             

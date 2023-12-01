@@ -1,4 +1,5 @@
 import unittest
+import sys
 from t_graph import TGraph, TNode, TAdjacencyList, TEdge
 
 class TestTyGraph(unittest.TestCase):
@@ -19,6 +20,11 @@ class TestTyGraph(unittest.TestCase):
                   (3,4)
                   ]
         self.G_full = TGraph(self.E_full)
+        
+        disconnected_E = [(0,1), (0,2), 
+                          (1,2)]
+
+        self.disconnected_G = TGraph(disconnected_E, num_vertices=4)
 
     def test_should_assert_property_was_added_to_node_0(self):
         node_id = 0
@@ -175,7 +181,24 @@ class TestTyGraph(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_should_assert_methods_dont_throw_exception_when_graph_is_not_connected(self):
-        self.assertEqual(False)
+        
+        expected_edges = [(0,1), (0,2)]
+        expected = TGraph(expected_edges, num_vertices=4)
+        expected.add_edges_properties({"weight": 1})
+        expected.add_node_property(0, "pi", None)
+        expected.add_node_property(0, "key", 0)
+        expected.add_node_property(1, "pi", 0)
+        expected.add_node_property(1, "key", 1)
+        expected.add_node_property(2, "pi", 0)
+        expected.add_node_property(2, "key", 1)
+        expected.add_node_property(3, "pi", None)
+        expected.add_node_property(3, "key", sys.float_info.max)
+        
+        
+        self.disconnected_G.add_edges_properties({"weight": 1})
+        actual = self.disconnected_G.prims_mst(0)
+        
+        self.assertEqual(expected, actual)
 
 if __name__ == '__main__':
     unittest.main()
