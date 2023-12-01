@@ -218,6 +218,7 @@ class TGraph:
         
         node_component_map = {v._id: i for i, v in enumerate(mst._V)} 
         forest = [set([v._id]) for v in mst._V]
+        
         edges = self.get_list_of_edges()
         
         sorted_edges = sorted(edges, key=lambda x: x[2][1][weight_property])
@@ -231,7 +232,7 @@ class TGraph:
                 for v_id in forest[component_v]:
                     node_component_map[v_id] = component_u
                 forest[component_v] = set()
-            
+                
         return mst
     
     def plot(self, nodes_properties=False, edges_properties=False):
