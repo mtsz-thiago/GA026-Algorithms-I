@@ -1,0 +1,12 @@
+{
+    "name": "unittest_debug",
+    "type": "python",
+    "request": "launch",
+    "module": "unittest",
+    "args": [
+      "-v",
+      "test_t_graph.py"
+    ],
+    "cwd": "${workspaceFolder}/tests",
+    "console": "integratedTerminal"
+}
