@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the following DOI."
+title: "Implementação acadêmica dos algoritmos de kruskal e Prim"
+version: "1.0.0"
+# doi: "DOI number"
+authors:
+  - name: "Thiago da Mota Souza"
+    affiliation: "LNCC"
+license: "MIT"
